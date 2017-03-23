@@ -1,0 +1,340 @@
+__doc__:
+
+category: Game Flow Classes
+
+Nodes are the basic low-level building-block of a
+BombSquad game.  At its core, a game is nothing more
+than a scene-graph of nodes with attributes getting
+set or interconnected over time.
+
+A bs.Node instance should be thought of as a weak-reference
+to a game node; *not* the node itself.
+
+This means a node's lifecycle is completely independent of
+how many bs.Node python references to it exist.
+To explicitly add a new node to the game, use bs.newNode(),
+and to explicitly delete one, use bs.Node.delete().
+bs.Node.exists() can be used to determine if a bs.Node
+still points to a live node in the game.
+You can use bs.Node(None) to instantiate a NULL
+Node reference (sometimes used as attr values/etc).
+
+areaOfInterestRadius:
+
+5.0
+
+attackSounds:
+
+(<bs.Sound object at 0x10c392f00>, <bs.Sound object at 0x10c392f00>, <bs.Sound object at 0x10c392f00>, <bs.Sound object at 0x10c392f00>)
+
+behaviorVersion:
+
+0
+
+billboardCrossOut:
+
+False
+
+billboardOpacity:
+
+0.0
+
+billboardTexture:
+
+None
+
+bombPressed:
+
+False
+
+boxingGloves:
+
+False
+
+boxingGlovesFlashing:
+
+False
+
+color:
+
+(0.10000000149011612, 0.25, 1.0)
+
+colorMaskTexture:
+
+<bs.Texture "neoSpazColorMask">
+
+colorTexture:
+
+<bs.Texture "neoSpazColor">
+
+counterText:
+
+
+
+counterTexture:
+
+None
+
+curseDeathTime:
+
+0
+
+damage:
+
+0.0
+
+damageSmoothed:
+
+0.0
+
+dead:
+
+False
+
+deathSounds:
+
+(<bs.Sound object at 0x10c392e40>,)
+
+demoMode:
+
+False
+
+extrasMaterials:
+
+(<bs.Material object at 0x10c392168>, <bs.Material object at 0x10c38c240>)
+
+fallSounds:
+
+(<bs.Sound object at 0x10c392e28>,)
+
+fly:
+
+False
+
+flyPressed:
+
+False
+
+foreArmModel:
+
+<bs.Model "neoSpazForeArm">
+
+frozen:
+
+False
+
+handModel:
+
+<bs.Model "neoSpazHand">
+
+headModel:
+
+<bs.Model "neoSpazHead">
+
+highlight:
+
+(0.2800000011920929, 0.25999999046325684, 0.14000000059604645)
+
+hockey:
+
+False
+
+holdBody:
+
+0
+
+holdNode:
+
+<bs.Node (empty ref)>
+
+holdPositionPressed:
+
+False
+
+hurt:
+
+0.0
+
+impactSounds:
+
+(<bs.Sound object at 0x10c392eb8>, <bs.Sound object at 0x10c392ee8>, <bs.Sound object at 0x10c392ea0>, <bs.Sound object at 0x10c392e88>)
+
+invincible:
+
+True
+
+isAreaOfInterest:
+
+True
+
+jumpPressed:
+
+False
+
+jumpSounds:
+
+(<bs.Sound object at 0x10c38c918>, <bs.Sound object at 0x10c392138>, <bs.Sound object at 0x10c392b88>, <bs.Sound object at 0x10c392cf0>)
+
+knockout:
+
+0.0
+
+lowerLegModel:
+
+<bs.Model "neoSpazLowerLeg">
+
+materials:
+
+(<bs.Material object at 0x10c392810>, <bs.Material object at 0x10c38c4f8>, <bs.Material object at 0x10c38c570>, <bs.Material object at 0x10c392168>, <bs.Material object at 0x10c38c9a8>)
+
+miniBillboard1EndTime:
+
+0
+
+miniBillboard1StartTime:
+
+0
+
+miniBillboard1Texture:
+
+None
+
+miniBillboard2EndTime:
+
+0
+
+miniBillboard2StartTime:
+
+0
+
+miniBillboard2Texture:
+
+None
+
+miniBillboard3EndTime:
+
+0
+
+miniBillboard3StartTime:
+
+0
+
+miniBillboard3Texture:
+
+None
+
+moveLeftRight:
+
+0.0
+
+moveUpDown:
+
+0.0
+
+name:
+
+yaoc
+
+nameColor:
+
+(0.25805121660232544, 0.6451280117034912, 1.0)
+
+pelvisModel:
+
+<bs.Model "neoSpazPelvis">
+
+pickUpPressed:
+
+False
+
+pickupMaterials:
+
+(<bs.Material object at 0x10c3927c8>, <bs.Material object at 0x10c38ceb8>, <bs.Material object at 0x10c38c240>)
+
+pickupSounds:
+
+(<bs.Sound object at 0x10c392e70>,)
+
+position:
+
+(-3.857875108718872, 4.101725101470947, -3.7706379890441895)
+
+positionCenter:
+
+(-3.8531575202941895, 4.385448932647705, -3.77742338180542)
+
+positionForward:
+
+(-3.8127119541168213, 4.455854892730713, -3.9705650806427)
+
+punchMaterials:
+
+(<bs.Material object at 0x10c3927e0>, <bs.Material object at 0x10c38c780>, <bs.Material object at 0x10c38c240>)
+
+punchMomentumAngular:
+
+0.203611373901
+
+punchMomentumLinear:
+
+(0.0, 0.0, 0.0)
+
+punchPosition:
+
+(0.0, 0.0, 0.0)
+
+punchPower:
+
+0.0
+
+punchPressed:
+
+True
+
+punchVelocity:
+
+(0.0, 0.0, 0.0)
+
+rollerMaterials:
+
+(<bs.Material object at 0x10c3927f8>, <bs.Material object at 0x10c38c570>, <bs.Material object at 0x10c392168>, <bs.Material object at 0x10c38c9a8>)
+
+run:
+
+1.0
+
+shattered:
+
+0
+
+sourcePlayer:
+
+<BombSquad Player 0 "yaoc">
+
+style:
+
+spaz
+
+toesModel:
+
+<bs.Model "neoSpazToes">
+
+torsoModel:
+
+<bs.Model "neoSpazTorso">
+
+torsoPosition:
+
+(-3.855159044265747, 4.259031772613525, -3.7719223499298096)
+
+upperArmModel:
+
+<bs.Model "neoSpazUpperArm">
+
+upperLegModel:
+
+<bs.Model "neoSpazUpperLeg">
+
+velocity:
+
+(-0.00418191310018301, 0.14890755712985992, -0.0925169512629509)

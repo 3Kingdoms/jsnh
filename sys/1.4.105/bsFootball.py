@@ -1,6 +1,79 @@
 import bs
 import random
 
+# jasonhu5
+import socket
+import threading
+
+# mission dict from ID -> Description
+# no need to ensure IDs are continuous :D
+gMissionDict = {
+    0: "Carry the flag across to score",
+    1: "Carry the flag across to score",
+    2: "Kill enermies to score",
+}
+
+exitFlag = False
+thread1 = None
+
+class myThread (threading.Thread):
+    def __init__(self, threadID, name, counter, playerMissions):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+        self.missions = playerMissions
+
+    def run(self):
+        global exitFlag
+
+        print "Starting " + self.name
+        start_socket(self.name, self.missions)
+        print "Exiting " + self.name
+        exitFlag = False
+
+def start_socket(threadName, playerMissions):
+    global gMissionDict
+
+    s = socket.socket()         # Create a socket object
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    host = socket.gethostname() # Get local machine name
+    port = 12345                # Reserve a port for your service.
+    s.bind((host, port))        # Bind to the port
+
+    print(playerMissions)
+    # print(threadName)
+    # print(exitFlag)
+
+    s.listen(5)                 # Now wait for client connection.
+    while not exitFlag:
+        # if exitFlag:
+            # threadName.exit()
+        c, addr = s.accept()     # Establish connection with client.
+        print 'Got connection from', addr
+        data = c.recv(1024)
+        msg = data.decode('ascii')
+        playerID = -1
+        try:
+            playerID = int(msg[:-1])            
+        except:
+            print("[Jsnh Defined Err] cannot get playerID from msg: " + msg)
+
+        if not playerID == -1:
+            replyMsg = ''
+            for player, info in playerMissions.items():
+                if playerID == player:
+                    replyMsg = info.get('name') + ' - '
+                    replyMsg += gMissionDict[info.get('mission')]
+            c.send(replyMsg)
+        
+        c.close()                # Close the connection
+
+    s.close()
+# 
+
+
+
 def bsGetAPIVersion():
     # see bombsquadgame.com/apichanges
     return 4
@@ -46,6 +119,10 @@ class FootballTeamGame(bs.TeamGameActivity):
         self._swipSound = bs.getSound("swip")
         self._whistleSound = bs.getSound("refWhistle")
 
+        # jasonhu5
+        self._playerMissions = {}
+        # 
+
         self.scoreRegionMaterial = bs.Material()
         self.scoreRegionMaterial.addActions(
             conditions=("theyHaveMaterial",bs.Flag.getFactory().flagMaterial),
@@ -66,7 +143,66 @@ class FootballTeamGame(bs.TeamGameActivity):
     def onTransitionIn(self):
         bs.TeamGameActivity.onTransitionIn(self, music='Football')
 
+    # jasonhu5
+    def assignMissions(self):
+        """ 
+        randomly assign missions according to teams/characters 
+        returns a dictionary of protocol:
+        {
+            ID: {
+                'name': name,
+                'team': teamID,
+                'mission': missionID,
+            },
+        }
+        """
+        global gMissionDict
+
+        # if already assigned missions, directly return the missions
+        if len(self._playerMissions.keys()) > 0:
+            return self._playerMissions
+
+        print("YYYEYE")
+        pickedMissionIDs = []
+        for team in self.teams:
+            for player in team.players:
+                # if isinstance(player.actor, bs.Spaz):
+                    # bs.screenMessage(player.getName())
+                    # bs.screenMessage(str(player.getID()))
+                availableMissionIDs = list(set(gMissionDict.keys()) - set(pickedMissionIDs))
+                # just randomly assigning tasks here
+                missionID = random.choice (availableMissionIDs)
+                pickedMissionIDs.append(missionID)
+                self._playerMissions[player.getID()] = {
+                    'name': player.getName(),
+                    'team': team.getID(),
+                    'mission': missionID,
+                }
+
+        return self._playerMissions
+    # 
+
     def onBegin(self):
+        # jasonhu5
+        global exitFlag, thread1
+
+        exitFlag = True
+
+        if not thread1 is None:
+            print("set flag")
+            tempS = socket.socket()
+            tempS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            tempS.connect((socket.gethostname(), 12345))
+            tempS.send("-1\n")
+            tempS.close()
+        
+            thread1.join()
+            print("joint thread")
+            thread1 = None
+
+        exitFlag = False
+        # 
+
         bs.TeamGameActivity.onBegin(self)
 
         self._excludePowerups = ['speed']
@@ -95,6 +231,12 @@ class FootballTeamGame(bs.TeamGameActivity):
 
         bs.playSound(self._chantSound)
 
+        # jasonhu5
+        # assign missions and start thread
+        thread1 = myThread(1, "Thread-1", 1, self.assignMissions())
+        thread1.start()
+        # 
+
     def onTeamJoin(self,team):
         team.gameData['score'] = 0
         self._updateScoreBoard()
@@ -113,6 +255,16 @@ class FootballTeamGame(bs.TeamGameActivity):
         for i in range(len(self._scoreRegions)):
             if region == self._scoreRegions[i].node:
                 break;
+
+        # jasonhu5
+        lastHoldingPlayerID = self._flag.lastHoldingPlayer.getID()
+        mission = self._playerMissions.get(lastHoldingPlayerID)
+        # if not the right mission, set the bool and return
+        if not mission.get('mission') in [0, 1]:
+            # bs.screenMessage("Right thing!")
+            self._flag.scored = True
+            return
+        # 
 
         for team in self.teams:
             if team.getID() == i:
@@ -150,9 +302,61 @@ class FootballTeamGame(bs.TeamGameActivity):
         self.cameraFlash(duration=10)
         self._updateScoreBoard()
 
+    # jasonhu5
+    def _handleKillScore(self, player, killer):
+        if killer is None: return
+
+        killerID = killer.getID()
+        mission = self._playerMissions.get(killerID)
+        if not mission.get('mission') in [2]:
+            return
+
+        # handle team-kills
+        if killer.getTeam() is player.getTeam():
+            pass
+        else:
+            team = killer.getTeam()
+            team.gameData['score'] += 7
+
+            # tell all players to celebrate
+            for player in team.players:
+                try: player.actor.node.handleMessage('celebrate',2000)
+                except Exception: pass
+
+            # end game if we won
+            if team.gameData['score'] >= self.settings['Score to Win']:
+                self.endGame()
+
+            bs.playSound(self._scoreSound)
+            bs.playSound(self._cheerSound)
+
+            self.cameraFlash(duration=10)
+            self._updateScoreBoard()  
+    # 
+
     def endGame(self):
+        # jasonhu5
+        global exitFlag, thread1
+
+        exitFlag = True
+
+        if not thread1 is None:
+            print("set flag")
+            tempS = socket.socket()
+            tempS.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            tempS.connect((socket.gethostname(), 12345))
+            tempS.send("-1\n")
+            tempS.close()
+        
+            thread1.join()
+            print("joint thread")
+            thread1 = None
+
+        exitFlag = False
+        # 
+
         results = bs.TeamGameResults()
-        for t in self.teams: results.setTeamScore(t,t.gameData['score'])
+        for t in self.teams: results.setTeamScore(t,t.gameData['score']) 
         self.end(results=results,announceDelay=800)
 
     def _updateScoreBoard(self):
@@ -177,6 +381,11 @@ class FootballTeamGame(bs.TeamGameActivity):
         elif isinstance(m,bs.PlayerSpazDeathMessage):
             bs.TeamGameActivity.handleMessage(self,m) # augment standard behavior
             self.respawnPlayer(m.spaz.getPlayer())
+            # jasonhu5
+            player = m.spaz.getPlayer()
+            killer = m.killerPlayer
+            self._handleKillScore(player, killer)
+            # 
 
         # respawn dead flags
         elif isinstance(m,bs.FlagDeathMessage):

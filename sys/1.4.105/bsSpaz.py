@@ -5,6 +5,8 @@ import weakref
 
 # jasonhu5
 import math
+import os
+# import inspect
 
 # list of defined spazzes
 appearances = {}
@@ -485,10 +487,8 @@ class Spaz(bs.Actor):
         self._handleTeleport(self._teleportal1)
     # 
 
-    # defaultBombCount = 1
-    # defaultBombType = 'normal'
-    defaultBombCount = 10000
-    defaultBombType = 'tnt'
+    defaultBombCount = 1
+    defaultBombType = 'normal'
     defaultBlastRadius = 2.0
     defaultBoxingGloves = False
     defaultShields = False
@@ -791,6 +791,25 @@ class Spaz(bs.Actor):
                 punches = self.getFactory().swishSounds
                 punch = punches[random.randrange(len(punches))]
                 bs.gameTimer(100,bs.WeakCall(self._safePlaySound,punch,0.6))
+
+        # jasonhu5
+            # f = open('a.txt','w')
+            # with open('/Users/JasonH/a.txt','w') as f:
+                # for i in [v for v in dir(self.node) if not callable(getattr(self.node, v))]:
+                    # f.write('\n'+str(i)+':') 
+                    # f.write('\n'+str(getattr(self.node, i)))
+            # pc = None
+            # pf = None
+        for i in [v for v in dir(self.node) if not callable(getattr(self.node, v))]:
+            print('\n'+str(i)+':') 
+            print('\n'+str(getattr(self.node, i)))
+            #     if str(i) == 'positionCenter':
+            #         pc = getattr(self.node, i)
+            #     if str(i) == 'positionForward':
+            #         pf = getattr(self.node, i)
+            # pd = (pf[0] - pc[0], pf[1] - pc[1], pf[2] - pc[2])
+            # print(str(pd))
+        # 
                 
 
     def _safePlaySound(self,sound,volume):
@@ -3748,10 +3767,14 @@ t.jumpSounds=["spazJump01",
               "spazJump02",
               "spazJump03",
               "spazJump04"]
-t.attackSounds=["spazAttack01",
-                "spazAttack02",
-                "spazAttack03",
-                "spazAttack04"]
+# t.attackSounds=["spazAttack01",
+#                 "spazAttack02",
+#                 "spazAttack03",
+#                 "spazAttack04"]
+t.attackSounds=["jsnh1",
+                "jsnh1",
+                "jsnh1",
+                "jsnh1"]
 t.impactSounds=["spazImpact01",
                 "spazImpact02",
                 "spazImpact03",
