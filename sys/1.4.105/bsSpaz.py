@@ -389,8 +389,9 @@ class Spaz(bs.Actor):
     
     pointsMult = 1
     # jasonhu5
-    curseTime = 5000
-    # curseTime = 8000
+    # curseTime = 5000
+    curseTime = 12000
+    _myBot = None
     # 
 
     # jasonhu5: used for teleporting
@@ -731,7 +732,22 @@ class Spaz(bs.Actor):
         used by player or AI connections.
         """
         if not self.node.exists(): return
-        self.node.jumpPressed = True
+        # self.node.jumpPressed = True
+
+        p = self.node.positionForward
+        v = self.node.velocity
+
+        newPos = p
+
+        def moveABit(v, p):
+            px = 0.0 + self.node.moveLeftRight * 0.1 + v[0] * 0.1
+            py = 0.0 - 1.3
+            pz = 0.0 - self.node.moveUpDown * 0.1 + v[2] * 0.1
+            return (p[0] + px, p[1] + py, p[2] + pz)
+        
+        for i in range(5):
+            newPos = moveABit(v, newPos)
+            self._player.actor.handleMessage(bs.StandMessage(newPos,random.uniform(0,360)))
 
     def onJumpRelease(self):
         """
@@ -739,7 +755,7 @@ class Spaz(bs.Actor):
         used by player or AI connections.
         """
         if not self.node.exists(): return
-        self.node.jumpPressed = False
+        # self.node.jumpPressed = False
 
     def onPickUpPress(self):
         """
@@ -793,16 +809,9 @@ class Spaz(bs.Actor):
                 bs.gameTimer(100,bs.WeakCall(self._safePlaySound,punch,0.6))
 
         # jasonhu5
-            # f = open('a.txt','w')
-            # with open('/Users/JasonH/a.txt','w') as f:
-                # for i in [v for v in dir(self.node) if not callable(getattr(self.node, v))]:
-                    # f.write('\n'+str(i)+':') 
-                    # f.write('\n'+str(getattr(self.node, i)))
-            # pc = None
-            # pf = None
-        for i in [v for v in dir(self.node) if not callable(getattr(self.node, v))]:
-            print('\n'+str(i)+':') 
-            print('\n'+str(getattr(self.node, i)))
+        # for i in [v for v in dir(self.node) if not callable(getattr(self.node, v))]:
+            # print('\n'+str(i)+':') 
+            # print('\n'+str(getattr(self.node, i)))
             #     if str(i) == 'positionCenter':
             #         pc = getattr(self.node, i)
             #     if str(i) == 'positionForward':
@@ -1689,6 +1698,11 @@ class Spaz(bs.Actor):
             self.bombCount += 1
         
         elif isinstance(m,bs.DieMessage):
+            # jasonhu5
+            if isinstance(self._myBot, SpazBot):
+                self._myBot.curseExplode()
+            # 
+
             wasDead = self._dead
             self._dead = True
             self.hitPoints = 0
@@ -1844,39 +1858,55 @@ class Spaz(bs.Actor):
             maxOfAll = max(abs(v[0]), abs(v[1]), abs(v[2]))
             offset = 1.0
 
-            # if speed too low, protection bombing
-            if maxOfAll <= 1:
+            # p = self.node.positionForward
+            # v = self.node.velocity
 
-                def gainControlsBack(self):
-                    self._player.setActor(self)
-                    self.connectControlsToPlayer(self._player)
+            newPos = p
 
-                spaz = SuicideBomber()
-                spaz.handleMessage(bs.StandMessage((p[0] + 1.0, p[1] + 0.0, p[2]),random.uniform(0,360)))
-                def _safeSetAttr(node,attr,val):
-                    if node.exists(): setattr(node,attr,val)
-                bs.gameTimer(1,bs.Call(_safeSetAttr,spaz.node,'hockey',True))
-                self._player.setActor(spaz)
-                spaz.connectControlsToPlayer(self._player)
+            def moveABit(self, v, p):
+                px = 0.0 + self.node.moveLeftRight * 0.1 + v[0] * 0.1
+                py = 0.0 - 1.3
+                pz = 0.0 - self.node.moveUpDown * 0.1 + v[2] * 0.1
+                return (p[0] + px, p[1] + py, p[2] + pz)
+            
+            for i in range(5):
+                newPos = self.moveABit(v, newPos)
+                self._player.actor.handleMessage(bs.StandMessage(newPos,random.uniform(0,360)))
 
-                self._timer = bs.Timer(self.curseTime + 500, bs.Call(gainControlsBack, self))
-                # speedScale = 4
-                # for i in range(8):
-                #     bomb = bs.Bomb(position=(p[0],p[1] + 2.0,p[2]),
-                #                velocity=(speedScale * math.sin(math.pi / 4 * i), 0.0, speedScale * math.cos(math.pi / 4 * i)),
-                #                bombType='impact',
-                #                blastRadius=self.blastRadius,
-                #                sourcePlayer=self.sourcePlayer,
-                #                owner=self.node).autoRetain()
-            else:
-                for i in range(10):
-                    bomb = bs.Bomb(position=(v[0] * offset + p[0] + (scale * i * v[0] / maxOfAll),p[1] + 0.0, v[2] * offset + p[2] + (scale * i * v[2] / maxOfAll)),
-                                   # velocity=(v[0]/maxOfAll*scale ,v[1]/maxOfAll*scale,v[2]/maxOfAll*scale),
-                                   velocity=(v[0],v[1],v[2]),
-                                   bombType=bombType,
-                                   blastRadius=self.blastRadius,
-                                   sourcePlayer=self.sourcePlayer,
-                                   owner=self.node).autoRetain()
+            # # if speed too low, protection bombing
+            # if maxOfAll <= 1:
+
+            #     # def gainControlsBack(self):
+            #     #     self._player.setActor(self)
+            #     #     self.connectControlsToPlayer(self._player)
+
+            #     spaz = SuicideBomber()
+            #     spaz.handleMessage(bs.StandMessage((p[0] + 1.0, p[1] + 0.0, p[2]),random.uniform(0,360)))
+            #     def _safeSetAttr(node,attr,val):
+            #         if node.exists(): setattr(node,attr,val)
+            #     bs.gameTimer(1,bs.Call(_safeSetAttr,spaz.node,'hockey',True))
+            #     self._player.setActor(spaz)
+            #     spaz.connectControlsToPlayer(self._player, self)
+            #     self._myBot = spaz
+
+            #     # self._timer = bs.Timer(self.curseTime + 500, bs.Call(gainControlsBack, self))
+            #     # speedScale = 4
+            #     # for i in range(8):
+            #     #     bomb = bs.Bomb(position=(p[0],p[1] + 2.0,p[2]),
+            #     #                velocity=(speedScale * math.sin(math.pi / 4 * i), 0.0, speedScale * math.cos(math.pi / 4 * i)),
+            #     #                bombType='impact',
+            #     #                blastRadius=self.blastRadius,
+            #     #                sourcePlayer=self.sourcePlayer,
+            #     #                owner=self.node).autoRetain()
+            # else:
+            #     for i in range(10):
+            #         bomb = bs.Bomb(position=(v[0] * offset + p[0] + (scale * i * v[0] / maxOfAll),p[1] + 0.0, v[2] * offset + p[2] + (scale * i * v[2] / maxOfAll)),
+            #                        # velocity=(v[0]/maxOfAll*scale ,v[1]/maxOfAll*scale,v[2]/maxOfAll*scale),
+            #                        velocity=(v[0],v[1],v[2]),
+            #                        bombType=bombType,
+            #                        blastRadius=self.blastRadius,
+            #                        sourcePlayer=self.sourcePlayer,
+            #                        owner=self.node).autoRetain()
         elif bombType == 'grenade':
             portScale = [0.1, 0.1, 0.1]
             offx = -1
@@ -2645,6 +2675,7 @@ class SpazBot(Spaz):
     # jasonhu5
     isBotFriendly = False
     _player = None
+    _ownerPlayerSpaz = None
     # 
 
     character = 'Spaz'
@@ -2671,7 +2702,7 @@ class SpazBot(Spaz):
     def getPlayer(self):
         return self._player
         
-    def connectControlsToPlayer(self,player,enableJump=True,enablePunch=True,enablePickUp=True,enableBomb=True,enableRun=True,enableFly=True):
+    def connectControlsToPlayer(self,player,spaz,enableJump=True,enablePunch=True,enablePickUp=True,enableBomb=True,enableRun=True,enableFly=True):
         """
         Wire this spaz up to the provided bs.Player.
         Full control of the character is given by default
@@ -2681,6 +2712,7 @@ class SpazBot(Spaz):
         
         player.resetInput()
         self._player = player
+        self._ownerPlayerSpaz = spaz
 
         # reset any currently connected player and/or the player we're now wiring up
         # if self._connectedToPlayer is not None:
@@ -3068,6 +3100,11 @@ class SpazBot(Spaz):
                 self.lastAttackedType = ('pickedUp','default')
             
         elif isinstance(m,bs.DieMessage):
+
+            # jasonhu5
+            self._player.setActor(self._ownerPlayerSpaz)
+            self._ownerPlayerSpaz.connectControlsToPlayer(self._player)
+            # 
 
             # report normal deaths for scoring purposes
             if not self._dead and not m.immediate:
