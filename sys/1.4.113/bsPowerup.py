@@ -239,7 +239,7 @@ def getDefaultPowerupDistribution():
                     ('landMines',0),
                     ('stickyBombs',0),
                     # jasonhu5
-                    ('overPower',1),
+                    ('overPower',0),
                     ('curse',0),
                     # 
                     ('combatBombs',0),

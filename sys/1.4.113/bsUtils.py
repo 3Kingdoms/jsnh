@@ -1254,6 +1254,7 @@ def _filterPlaylist(playlist,sessionType,addResolvedType=False,removeUnOwned=Tru
                 if gamespec['type'] == 'Happy_Thoughts.HappyThoughtsGame': gamespec['type'] = 'bsAssault.AssaultGame'
                 if gamespec['type'] == 'Assault.AssaultGame': gamespec['type'] = 'bsAssault.AssaultGame'
                 if gamespec['type'] == 'King_of_the_Hill.KingOfTheHillGame': gamespec['type'] = 'bsKingOfTheHill.KingOfTheHillGame'
+                if gamespec['type'] == 'Occupy_Base.OccupyBaseGame': gamespec['type'] = 'bsOccupyBase.OccupyBaseGame'
                 if gamespec['type'] == 'Capture_the_Flag.CTFGame': gamespec['type'] = 'bsCaptureTheFlag.CTFGame'
                 if gamespec['type'] == 'Death_Match.DeathMatchGame': gamespec['type'] = 'bsDeathMatch.DeathMatchGame'
                 if gamespec['type'] == 'ChosenOne.ChosenOneGame': gamespec['type'] = 'bsChosenOne.ChosenOneGame'

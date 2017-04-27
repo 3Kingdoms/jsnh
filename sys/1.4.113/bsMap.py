@@ -1123,6 +1123,66 @@ class LakeFrigidMap(Map):
 
 registerMap(LakeFrigidMap)
 
+class LegoMap(Map):
+    # import tipTopLevelDefs as defs
+    import lego_v7 as defs
+    name = 'Lego Map'
+    playTypes = ['melee','keepAway','teamFlag','kingOfTheHill', 'occupyBase']
+
+    @classmethod
+    def getPreviewTextureName(cls):
+        return 'tipTopPreview'
+
+    @classmethod
+    def onPreload(cls):
+        data = {}
+        # data['model'] = bs.getModel('tipTopLevel')
+        data['bottomModel'] = bs.getModel('tipTopLevelBottom')
+        # data['collideModel'] = bs.getCollideModel('tipTopLevelCollide')
+        # data['tex'] = bs.getTexture('tipTopLevelColor')
+        #Added by CC
+        data['model'] = bs.getModel('lego_large_with_bridge_and_plane')
+        ## data['bottomModel'] = bs.getModel('tipTopLevelBottom')
+        data['collideModel'] = bs.getCollideModel('lego_large_with_bridge_and_plane')
+        data['tex'] = bs.getTexture('lego_with_towers2_v3')
+        #
+        data['bgTex'] = bs.getTexture('tipTopBGColor')
+        data['bgModel'] = bs.getModel('tipTopBG')
+        data['railingCollideModel'] = bs.getCollideModel('tipTopLevelBumper')
+        return data
+
+    def __init__(self):
+        Map.__init__(self,vrOverlayCenterOffset=(0,-0.2,2.5))
+        self.node = bs.newNode('terrain',
+                               delegate=self,
+                               attrs={'collideModel':self.preloadData['collideModel'],
+                                      'model':self.preloadData['model'],
+                                      'colorTexture':self.preloadData['tex'],
+                                      'color':(0.7,0.7,0.7),
+                                      'materials':[bs.getSharedObject('footingMaterial')]})
+        self.bottom = bs.newNode('terrain',
+                                 attrs={'model':self.preloadData['bottomModel'],
+                                        'lighting':False,
+                                        'color':(0.7,0.7,0.7),
+                                        'colorTexture':self.preloadData['tex']})
+        self.bg = bs.newNode('terrain',
+                             attrs={'model':self.preloadData['bgModel'],
+                                    'lighting':False,
+                                    'color':(0.4,0.4,0.4),
+                                    'background':True,
+                                    'colorTexture':self.preloadData['bgTex']})
+        self.railing = bs.newNode('terrain',
+                                  attrs={'collideModel':self.preloadData['railingCollideModel'],
+                                         'materials':[bs.getSharedObject('railingMaterial')],
+                                         'bumper':True})
+        bsGlobals = bs.getSharedObject('globals')
+        bsGlobals.tint = (0.8,0.9,1.3)
+        bsGlobals.ambientColor = (0.8,0.9,1.3)
+        bsGlobals.vignetteOuter = (0.79,0.79,0.69)
+        bsGlobals.vignetteInner = (0.97,0.97,0.99)
+
+registerMap(LegoMap)
+
 class TipTopMap(Map):
     import tipTopLevelDefs as defs
     name = 'Tip Top'

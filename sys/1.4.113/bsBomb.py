@@ -387,11 +387,12 @@ class Blast(bs.Actor):
         bs.gameTimer(50,self.node.delete)
 
         # throw in an explosion and flash````
-        explosion = bs.newNode("explosion",
-                               attrs={'position':position,
-                                      'velocity':(velocity[0],max(-1.0,velocity[1]),velocity[2]),
-                                      'radius':self.radius,
-                                      'big':(self.blastType == 'tnt' or self.blastType == 'ranger' or self.blastType == 'grenade')})
+        if not self.blastType == 'sticky':
+          explosion = bs.newNode("explosion",
+                                 attrs={'position':position,
+                                        'velocity':(velocity[0],max(-1.0,velocity[1]),velocity[2]),
+                                        'radius':self.radius,
+                                        'big':(self.blastType == 'tnt' or self.blastType == 'ranger' or self.blastType == 'grenade')})
         if self.blastType == "ice":
             explosion.color = (0,0.05,0.4)
             
@@ -579,61 +580,65 @@ class Blast(bs.Actor):
                                   'color': (0.0,0.0,1.0),
                                   'volumeIntensityScale': 5.0})
         else:
-            light = bs.newNode('light',
-                           attrs={'position':position,
-                                  'color': (0.6,0.6,1.0) if self.blastType == 'ice' else (1,0.3,0.1),
-                                  'volumeIntensityScale': 10.0})
-
-        s = random.uniform(0.6,0.9)
+            if not self.blastType == 'sticky':
+                light = bs.newNode('light',
+                               attrs={'position':position,
+                                      'color': (0.6,0.6,1.0) if self.blastType == 'ice' else (1,0.3,0.1),
+                                      'volumeIntensityScale': 10.0})
         scorchRadius = lightRadius = self.radius
-        if self.blastType == 'tnt':
-            lightRadius *= 1.4
-            scorchRadius *= 1.15
-            s *= 3.0
-        elif self.blastType == 'ranger':
-            lightRadius *= 1.6
-            s *= 2.0
-        elif self.blastType == 'combat':
-            lightRadius *= 0.5
-            s *= 2.0
-        elif self.blastType == 'miniDynamite':
-            lightRadius *= 0.15
-            s *= 1.0
-        elif self.blastType == 'sticky':
-            lightRadius *= 0.05
+        if not self.blastType == 'sticky':
+            s = random.uniform(0.6,0.9)
+            if self.blastType == 'tnt':
+                lightRadius *= 1.4
+                scorchRadius *= 1.15
+                s *= 3.0
+            elif self.blastType == 'ranger':
+                lightRadius *= 1.6
+                s *= 2.0
+            elif self.blastType == 'combat':
+                lightRadius *= 0.5
+                s *= 2.0
+            elif self.blastType == 'miniDynamite':
+                lightRadius *= 0.15
+                s *= 1.0
+            elif self.blastType == 'sticky':
+                lightRadius *= 0.05
+                scorchRadius = 0.0
 
-        iScale = 1.6
-        bsUtils.animate(light,"intensity",{0:2.0*iScale, int(s*20):0.1*iScale, int(s*25):0.2*iScale, int(s*50):17.0*iScale, int(s*60):5.0*iScale, int(s*80):4.0*iScale, int(s*200):0.6*iScale, int(s*2000):0.00*iScale, int(s*3000):0.0})
-        bsUtils.animate(light,"radius",{0:lightRadius*0.2, int(s*50):lightRadius*0.55, int(s*100):lightRadius*0.3, int(s*300):lightRadius*0.15, int(s*1000):lightRadius*0.05})
-        bs.gameTimer(int(s*3000),light.delete)
+            iScale = 1.6
+            bsUtils.animate(light,"intensity",{0:2.0*iScale, int(s*20):0.1*iScale, int(s*25):0.2*iScale, int(s*50):17.0*iScale, int(s*60):5.0*iScale, int(s*80):4.0*iScale, int(s*200):0.6*iScale, int(s*2000):0.00*iScale, int(s*3000):0.0})
+            bsUtils.animate(light,"radius",{0:lightRadius*0.2, int(s*50):lightRadius*0.55, int(s*100):lightRadius*0.3, int(s*300):lightRadius*0.15, int(s*1000):lightRadius*0.05})
+            bs.gameTimer(int(s*3000),light.delete)
 
         # make a scorch that fades over time
-        scorch = bs.newNode('scorch',
-                        attrs={'position':position,'size':scorchRadius*0.5,'big':(self.blastType == 'tnt' or self.blastType == 'ranger' or self.blastType == 'grenade')})
-        if self.blastType == 'ice':
-            scorch.color = (1,1,1.5)
-            
-        if self.blastType == 'fire':
-            scorch.color = (1.25,0.95,0.95)
-            
-        if self.blastType == 'ranger':
-            scorch.color = (2,2,2)
-            
-        if self.blastType == 'hijump':
-            scorch.color = (0.7,0.05,0.65)
-           
-        if self.blastType == 'healing':
-            scorch.color = (2,1.73,2)
-            
-        if self.blastType == 'tnt':
-            scorch.color = (0.4,0.7,0.4)
+        if not self.blastType == 'sticky':
+          scorch = bs.newNode('scorch',
+                          attrs={'position':position,'size':scorchRadius*0.5,'big':(self.blastType == 'tnt' or self.blastType == 'ranger' or self.blastType == 'grenade')})
+          if self.blastType == 'ice':
+              scorch.color = (1,1,1.5)
+              
+          if self.blastType == 'fire':
+              scorch.color = (1.25,0.95,0.95)
+              
+          if self.blastType == 'ranger':
+              scorch.color = (2,2,2)
+              
+          if self.blastType == 'hijump':
+              scorch.color = (0.7,0.05,0.65)
+             
+          if self.blastType == 'healing':
+              scorch.color = (2,1.73,2)
+              
+          if self.blastType == 'tnt':
+              scorch.color = (0.4,0.7,0.4)
 
-        if self.blastType == 'fire':
-            bsUtils.animate(scorch,"presence",{3000:2, 5000:1.5, 5150:0.5, 8000:0})
-            bs.gameTimer(8000,scorch.delete)
-        else:
-            bsUtils.animate(scorch,"presence",{3000:1, 13000:0})
-            bs.gameTimer(13000,scorch.delete)
+          if self.blastType == 'fire':
+              bsUtils.animate(scorch,"presence",{3000:2, 5000:1.5, 5150:0.5, 8000:0})
+              bs.gameTimer(8000,scorch.delete)
+          else:
+              if not self.blastType == 'sticky':
+                  bsUtils.animate(scorch,"presence",{3000:1, 13000:0})
+                  bs.gameTimer(13000,scorch.delete)
 
         if self.blastType == 'ice':
             bs.playSound(factory.hissSound,position=light.position)
@@ -644,7 +649,7 @@ class Blast(bs.Actor):
         if self.blastType == 'curse':
             bs.playSound(factory.overdriveExplosionSound,position=light.position)            
             
-        p = light.position
+        p = position
         if self.blastType == 'combat':
             bs.playSound(factory.combatExplosionSound,position=p)
         elif self.blastType == 'knocker':
@@ -655,8 +660,9 @@ class Blast(bs.Actor):
             bs.playSound(factory.hijumpSound,volume=2.0,position=p)  
         else:
             if self.blastType != 'miniDynamite':
-                bs.playSound(factory.getRandomExplodeSound(),volume=1.0,position=p)
-                bs.playSound(factory.debrisFallSound,position=p)
+                # bs.playSound(factory.getRandomExplodeSound(),volume=1.0,position=p)
+                # bs.playSound(factory.debrisFallSound,position=p)
+                pass
         
         if isinstance(bs.getSession(),bs.CoopSession) or bs.getConfig().get('Camera Shake', True):
             if self.blastType == 'ranger':
@@ -704,6 +710,7 @@ class Blast(bs.Actor):
 
                 # new
                 mag = 2000.0
+                if self.blastType == 'sticky': mag = 1.0
                 if self.blastType == 'ice': mag *= 0.5
                 elif self.blastType == 'impact': mag *= 1.0
                 elif self.blastType == 'fire': mag *= 0.15
@@ -1418,9 +1425,17 @@ class Bomb(bs.Actor):
 
             if m.hitSubType != 'healing' and m.hitSubType != 'hijump' and m.hitSubType != 'knocker': # Only the bombs not mentioned in this line will cause other bombs to explode
                 bs.gameTimer(100+int(random.random()*100),bs.WeakCall(self.handleMessage,ExplodeMessage()))
+        # self.node.handleMessage("impulse",m.pos[0],m.pos[1],m.pos[2],
+        #                         m.velocity[0],m.velocity[1],m.velocity[2],
+        #                         m.magnitude,m.velocityMagnitude,m.radius,0,m.velocity[0],m.velocity[1],m.velocity[2])
+
+        # bs.screenMessage('here')
+        # bs.screenMessage(str(m.magnitude))
+
         self.node.handleMessage("impulse",m.pos[0],m.pos[1],m.pos[2],
                                 m.velocity[0],m.velocity[1],m.velocity[2],
-                                m.magnitude,m.velocityMagnitude,m.radius,0,m.velocity[0],m.velocity[1],m.velocity[2])
+                                10000.0,m.velocityMagnitude,m.radius,0,m.velocity[0],m.velocity[1],m.velocity[2])
+
 
         if m.srcNode.exists():
             pass

@@ -248,6 +248,10 @@ class SpazFactory(object):
         self.homeRunSound = bs.getSound('homeRun')
         self.swishSounds = (bs.getSound('punchSwish1'),
                           bs.getSound('punchSwish2'))
+
+        # jasonhu5
+        self.hissSound = bs.getSound('activateBeep')
+        # 
         
         self.blockSound = bs.getSound('block')
         self.shatterSound = bs.getSound('shatter')
@@ -398,6 +402,7 @@ class Spaz(bs.Actor):
     _bombSpotLight = None
     _taichiBombs = []
     _taichiBombCenter = None
+    _taichiBombSoundSum = 0
 
     # jasonhu5: used for teleporting
     _teleportal1 = (0.0, 0.0, 0.0)
@@ -573,6 +578,7 @@ class Spaz(bs.Actor):
         if startInvincible:
             def _safeSetAttr(node,attr,val):
                 if node.exists(): setattr(node,attr,val)
+            # bs.gameTimer(15000000,bs.Call(_safeSetAttr,self.node,'invincible',False))
             bs.gameTimer(1500,bs.Call(_safeSetAttr,self.node,'invincible',False))
 
         self.hitPoints = 1000
@@ -746,20 +752,40 @@ class Spaz(bs.Actor):
 
         newPos = (p[0] + px, p[1] + py, p[2] + pz)
 
+        def _doEmit():
+            position = (p[0],p[1] + 0.0,p[2])
+            velocity = (speedScale * math.sin(math.pi / 4 * i), 0.0, speedScale * math.cos(math.pi / 4 * i))
+            bs.emitBGDynamics(position=position,velocity=velocity,count=int(1.0+random.random()*4),emitType='tendrils',tendrilType='smoke')
+            bs.emitBGDynamics(position=position,emitType='distortion',spread=1.0)
+         # looks better if we delay a bit
+
         if (count < const_cnt_bomb):
             speedScale = 3.0
             for i in range(4):
-                bomb = bs.Bomb(position=(p[0],p[1] + 0.0,p[2]),
-                    velocity=(speedScale * math.sin(math.pi / 4 * i), 0.0, speedScale * math.cos(math.pi / 4 * i)),
-                    bombType='healing',
-                    blastRadius=const_blast_radius,
-                    sourcePlayer=self.sourcePlayer,
-                    owner=self.node).autoRetain()
+                bs.gameTimer(50,_doEmit)
 
-        self._player.actor.handleMessage(bs.StandMessage(newPos, (-const_per_angle * count) % 360))
+        # if (count < const_cnt_bomb):
+        #     speedScale = 3.0
+        #     for i in range(4):
+        #         bomb = bs.Bomb(position=(p[0],p[1] + 0.0,p[2]),
+        #             velocity=(speedScale * math.sin(math.pi / 4 * i), 0.0, speedScale * math.cos(math.pi / 4 * i)),
+        #             bombType='healing',
+        #             blastRadius=const_blast_radius,
+        #             sourcePlayer=self.sourcePlayer,
+        #             owner=self.node).autoRetain()
+
+        # self._player.actor.handleMessage(bs.StandMessage(newPos, (-const_per_angle * count) % 360))
 
         if (count < const_cnt_total):
             self._timerMoveInstantly = bs.Timer(10, bs.WeakCall(self.moveInstantly, p, v, lr, ud, count + 1))
+        else:
+            bs.Blast(position=self._taichiBombCenter,velocity=(0,0,0),
+                blastRadius=5.0,blastType='sticky',sourcePlayer=self._player,hitType='explosion',hitSubType='sticky').autoRetain()
+            pos = self._taichiBombCenter
+            v = (0.0,0.0,0.0)
+            self.node.handleMessage("impulse",pos[0],pos[1],pos[2],
+                                    v[0],v[1],v[2],
+                                    10000.0,10.0,5.0,0,v[0], v[1], v[2])
 
     def circleBomb(self, p, count):
         const_cnt_total = 64
@@ -790,8 +816,8 @@ class Spaz(bs.Actor):
                         attrs={'position':(off0 + p[0] ,p[1] + off1, off2 + p[2]),'size':scorchRadius*0.5,'big':False})
 
             self._taichiBombs.append(scorch)
-            bsUtils.animate(scorch,"presence",{3000:1, 13000:0})
-            # bs.gameTimer(13000,scorch.delete)
+            bsUtils.animate(scorch,"presence",{1000:1, 6000:0})
+            bs.gameTimer(6000,scorch.delete)
             
             # bomb = bs.Bomb(position=(off0 + p[0] ,p[1] + off1, off2 + p[2]),
             #     velocity=(0.0, 0.0, 0.0),
@@ -819,8 +845,8 @@ class Spaz(bs.Actor):
                                 attrs={'position':(p[0] ,p[1] + offset1, p[2]),'size':scorchRadius*1.0,'big':False})
                         scorch.color = (2,2,2)
                     self._taichiBombs.append(scorch)
-                    bsUtils.animate(scorch,"presence",{3000:1, 13000:0})
-                    # bs.gameTimer(13000,scorch.delete)
+                    bsUtils.animate(scorch,"presence",{1000:1, 6000:0})
+                    bs.gameTimer(6000,scorch.delete)
                 # for x in range(4):
                     # bomb = bs.Bomb(position=(p[0] ,p[1] + offset1, p[2]),
                     #     velocity=(0.0, 0.0, 0.0),
@@ -859,8 +885,8 @@ class Spaz(bs.Actor):
                 scorch.color = (2,2,2)
 
             self._taichiBombs.append(scorch)
-            bsUtils.animate(scorch,"presence",{3000:1, 13000:0})
-            # bs.gameTimer(13000,scorch.delete)
+            bsUtils.animate(scorch,"presence",{1000:1, 6000:0})
+            bs.gameTimer(6000,scorch.delete)
             
             # bomb = bs.Bomb(position=(off0 + p[0] ,p[1] + off1, off2 + p[2]),
             #     velocity=(0.0, 0.0, 0.0),
@@ -878,27 +904,76 @@ class Spaz(bs.Actor):
             self.taichiRotate(0)
 
     def taichiRotate(self, count):
-        const_cnt_total = 1200
-        const_rotation_angle = -2
+        const_cnt_total = 300
+        rotation_angle = (count * -1.0) / 4.0
 
-        # offset0 = math.sin(2 * math.pi / const_cnt_total * count) * (unit * r)
-        # offset2 = math.cos(2 * math.pi / const_cnt_total * count) * (unit * r)
+        pp = self.node.positionForward
 
-        def rotate(origin, point, angle):
-            ox, o_, oy = origin
-            px, p_, py = point
+        blast_flag = True
+
+        def rotate(origin, point, angle, blast_flag):
+            from math import sqrt, pow
+            ox, oh, oy = origin
+            px, ph, py = point
 
             qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
             qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-            return (qx, p_, qy)
+
+            r_ext_rate = 2.0
+            const_blast_radius = 3.0
+            blastPos = (
+                r_ext_rate * qx - ox + (pp[0] - ox), 
+                ph + (pp[1] - oh), 
+                r_ext_rate * qy - oy + (pp[2] - oy)
+            )
+
+            # dist = sqrt(pow(ox - px, 2) + pow(oh - ph, 2) + pow(oy - py, 2))
+            if blast_flag:
+                bs.Blast(position=blastPos,velocity=(px - ox,ph - oh,py - oy),
+                    blastRadius=const_blast_radius,blastType='sticky',sourcePlayer=self._player,hitType='explosion',hitSubType='sticky').autoRetain()
+
+            return (qx + (pp[0] - ox), ph + (pp[1] - oh), qy + (pp[2] - oy))
+
+        self._taichiBombSoundSum += count
+        # print(str(self._taichiBombSoundSum))
+        if self._taichiBombSoundSum > 3500:
+            self._taichiBombSoundSum = 0
+            bs.playSound(self.getFactory().hissSound, position=self._taichiBombCenter)
+
+        if count == const_cnt_total - 20:
+            bs.playSound(bs.getSound('taichiSound'), volume=1.0, position=self._taichiBombCenter)
 
         for s in self._taichiBombs:
+            if not s.exists():
+                continue
             p = getattr(s, "position")
-            newPos = rotate(self._taichiBombCenter, p, math.radians(const_rotation_angle))
+            if blast_flag:
+                newPos = rotate(self._taichiBombCenter, p, math.radians(rotation_angle), blast_flag)
+                blast_flag = False
+            else:
+                newPos = rotate(self._taichiBombCenter, p, math.radians(rotation_angle), blast_flag)
+
             setattr(s, "position", (newPos))
+
+        self._taichiBombCenter = pp
 
         if (count < const_cnt_total):
             self._timer = bs.Timer(10, bs.WeakCall(self.taichiRotate, count + 1))
+        else:
+            light = bs.newNode('light',
+                           attrs={'position':self._taichiBombCenter
+                           ,
+                                  'color': (2,2,2), #(0.6,0.6,1.0) if self.blastType == 'ice' else (1,0.3,0.1),
+                                  'volumeIntensityScale': 10.0})
+            s = random.uniform(0.6,0.9)
+            iScale = 1.6
+            lightRadius = 0.6
+            bsUtils.animate(light,"intensity",{0:2.0*iScale, int(s*20):0.1*iScale, int(s*25):0.2*iScale, int(s*50):50.0*iScale, int(s*60):5.0*iScale, int(s*80):4.0*iScale, int(s*200):0.6*iScale, int(s*1500):10.00*iScale, int(s*4000):0.0})
+            bsUtils.animate(light,"radius",{0:lightRadius*0.05, int(s*1300):lightRadius*0.25, int(s*1500):lightRadius*0.00})
+            bs.gameTimer(int(s*10000),light.delete)
+
+            # self.moveInstantly(self._taichiBombCenter, self.node.velocity, self.node.moveLeftRight, self.node.moveUpDown, 1)
+            self._timer = bs.Timer(1000, bs.WeakCall(self.moveInstantly, self._taichiBombCenter, self.node.velocity, self.node.moveLeftRight, self.node.moveUpDown, 1))
 
     def onJumpPress(self):
         """
@@ -906,18 +981,21 @@ class Spaz(bs.Actor):
         used by player or AI connections.
         """
         if not self.node.exists(): return
-        # self.node.jumpPressed = True
-        p = self.node.positionForward
-        v = self.node.velocity
+        self.node.jumpPressed = True
 
-        lr = self.node.moveLeftRight
-        ud = self.node.moveUpDown
+        # jaosnhu5
+        # p = self.node.positionForward
+        # v = self.node.velocity
 
-        px = 0.0 + lr * 0.2 + v[0] * 0.5
-        py = 0.0 - 1.3
-        pz = 0.0 - ud * 0.2 + v[2] * 0.5
-        newPos = (p[0] + px, p[1] + py, p[2] + pz)
-        self._player.actor.handleMessage(bs.StandMessage(newPos, random.uniform(0,360)))
+        # lr = self.node.moveLeftRight
+        # ud = self.node.moveUpDown
+
+        # px = 0.0 + lr * 0.2 + v[0] * 0.5
+        # py = 0.0 - 1.3
+        # pz = 0.0 - ud * 0.2 + v[2] * 0.5
+        # newPos = (p[0] + px, p[1] + py, p[2] + pz)
+        # self._player.actor.handleMessage(bs.StandMessage(newPos, random.uniform(0,360)))
+        # 
 
 
     def onJumpRelease(self):
@@ -926,7 +1004,7 @@ class Spaz(bs.Actor):
         used by player or AI connections.
         """
         if not self.node.exists(): return
-        # self.node.jumpPressed = False
+        self.node.jumpPressed = False
 
     def onPickUpPress(self):
         """
@@ -1014,19 +1092,20 @@ class Spaz(bs.Actor):
         """
         if not self.node.exists(): return
         
-        # if self._dead or self.frozen: return
-        # if self.node.knockout > 0.0: return
-        # self.node.bombPressed = True
-        # if not self.node.holdNode.exists(): self.dropBomb()
+        if self._dead or self.frozen: return
+        if self.node.knockout > 0.0: return
+        self.node.bombPressed = True
+        if not self.node.holdNode.exists(): self.dropBomb()
 
-        v = self.node.velocity
-        p = self.node.positionForward
+        # jasonhu5 taichi
+        # v = self.node.velocity
+        # p = self.node.positionForward
         
-        self._taichiBombCenter = p
-        self._taichiBombs = []
-
-        self.circleBomb(p, 0)
-
+        # self._taichiBombCenter = p
+        # self._taichiBombs = []
+        # self._taichiBombSoundSum = 0
+        # self.circleBomb(p, 0)
+        #
 
     def onBombRelease(self):
         """
@@ -1034,7 +1113,7 @@ class Spaz(bs.Actor):
         used for player or AI connections.
         """
         if not self.node.exists(): return
-        # self.node.bombPressed = False
+        self.node.bombPressed = False
 
     def onRun(self,value):
         """
@@ -3295,8 +3374,9 @@ class SpazBot(Spaz):
         elif isinstance(m,bs.DieMessage):
 
             # jasonhu5
-            self._player.setActor(self._ownerPlayerSpaz)
-            self._ownerPlayerSpaz.connectControlsToPlayer(self._player)
+            if self.isBotFriendly:
+                self._player.setActor(self._ownerPlayerSpaz)
+                self._ownerPlayerSpaz.connectControlsToPlayer(self._player)
             # 
 
             # report normal deaths for scoring purposes
@@ -3457,6 +3537,20 @@ class BomberBotProStaticShielded(BomberBotProShielded):
     """
     static = True
     throwDistMin = 0.0
+
+class BomberBotProStaticShielded(BomberBotProShielded):
+    """
+    category: Bot Classes
+    
+    A more aggressive red version of bs.BomberBot
+    who starts with shields and
+    who generally stays in one place.
+    """
+    static = True
+    # throwRate = 2.0
+    throwDistMin = 0.0
+    defaultBombType = 'impact'
+    # throwiness = 5.0
 
 class ToughGuyBot(SpazBot):
     """
