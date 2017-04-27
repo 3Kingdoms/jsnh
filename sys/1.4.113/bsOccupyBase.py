@@ -311,7 +311,7 @@ class OccupyBaseGame(bs.TeamGameActivity):
             self._updateFlagState()
             self.respawnPlayer(player)
         elif isinstance(m,bs.SpazBotDeathMessage):
-            pass
+            # pass
             self._bots = None
             self._bots = bs.BotSet()
             bs.gameTimer(100,bs.Call(self._bots.spawnBot,bs.BomberBotProStaticShielded,pos=(-4.7,8,6.9),spawnTime=5000))
